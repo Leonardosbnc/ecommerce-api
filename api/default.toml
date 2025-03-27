@@ -1,0 +1,36 @@
+[default]
+
+[default.db]
+uri = ""
+connect_args = { check_same_thread = false }
+echo = false
+
+[default.security]
+# Set secret key in .secrets.toml
+# SECRET_KEY = ""
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_MINUTES = 600
+RESET_PASSWORD_TOKEN_EXPIRE_MINUTES = 15
+
+[default.server]
+port = 8080
+host = "127.0.0.1"
+log_level = "info"
+reload = false
+
+[default.email]
+token = ''
+default_from = ''
+
+[testing.security]
+SECRET_KEY = "TEST_SECRET_KEY"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_MINUTES = 600
+RESET_PASSWORD_TOKEN_EXPIRE_MINUTES = 15
+
+[testing.db]
+uri = "sqlite:///{{ this.current_env | lower }}.db"
+connect_args = { check_same_thread = false }
+echo = false
