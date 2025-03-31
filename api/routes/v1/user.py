@@ -10,10 +10,24 @@ from api.serializers.adress import (
     PartialUpdateAddress,
     MultipleAddressResponse,
 )
+from api.serializers.user import UserResponse, UserRequest
 from api.db import ActiveSession
-from api.models import Address
+from api.models import Address, User
 
 router = APIRouter()
+
+
+@router.post(
+    "/", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
+def create_user(data: UserRequest, session: ActiveSession):
+    user = User.model_validate(data)
+
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    return user
 
 
 @router.get("/addresses/{id}", response_model=AddressResponse)
