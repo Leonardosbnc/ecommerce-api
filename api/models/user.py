@@ -16,6 +16,7 @@ class User(TimestamppedModel, table=True):
     username: str = Field(unique=True)
     password: HashedPassword
     is_admin: bool = Field(default=False)
+    confirmed: bool = Field(default=False)
 
     addresses: Optional[List["Address"]] = Relationship(back_populates="user")
 

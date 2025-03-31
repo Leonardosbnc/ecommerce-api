@@ -22,6 +22,7 @@ reload = false
 [default.email]
 token = ''
 default_from = ''
+enabled = false
 
 [testing.security]
 SECRET_KEY = "TEST_SECRET_KEY"

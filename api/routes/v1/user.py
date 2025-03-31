@@ -1,18 +1,30 @@
 from uuid import UUID
 from typing import List
 from fastapi import APIRouter, HTTPException, status
+from datetime import timedelta
 
 from sqlmodel import select
-from api.auth import AuthenticatedUser
-from api.serializers.adress import (
+from api.auth import (
+    AuthenticatedUser,
+    create_confirm_account_token,
+    validate_token,
+)
+from api.serializers.address import (
     AddressResponse,
     AddressRequest,
     PartialUpdateAddress,
     MultipleAddressResponse,
 )
-from api.serializers.user import UserResponse, UserRequest
+from api.serializers.user import (
+    UserResponse,
+    UserRequest,
+    ConfirmAccountRequest,
+)
 from api.db import ActiveSession
 from api.models import Address, User
+from api.services.email import EmailService
+from api.config import settings
+
 
 router = APIRouter()
 
@@ -20,18 +32,36 @@ router = APIRouter()
 @router.post(
     "/", response_model=UserResponse, status_code=status.HTTP_201_CREATED
 )
-def create_user(data: UserRequest, session: ActiveSession):
+async def create_user(data: UserRequest, session: ActiveSession):
     user = User.model_validate(data)
 
     session.add(user)
     session.commit()
     session.refresh(user)
 
+    if settings.email.enabled is True:
+        token_expires = timedelta(minutes=15)
+        token = create_confirm_account_token(
+            data={"sub": user.username, "fresh": False},
+            expires_delta=token_expires,
+        )
+
+        EmailService().send_email_confirmation(token, user.email)
+
     return user
 
 
+@router.post("/confirm_account", status_code=204)
+async def confirm_account(data: ConfirmAccountRequest, session: ActiveSession):
+    user = await validate_token(data.token)
+    user.confirmed = True
+
+    session.add(user)
+    session.commit()
+
+
 @router.get("/addresses/{id}", response_model=AddressResponse)
-async def get_adress(
+async def get_address(
     id: UUID, current_user: AuthenticatedUser, session: ActiveSession
 ):
     address = session.get(Address, id)
@@ -63,7 +93,7 @@ async def list_user_addresses(
     response_model=AddressResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_adress(
+async def create_address(
     data: AddressRequest,
     current_user: AuthenticatedUser,
     session: ActiveSession,

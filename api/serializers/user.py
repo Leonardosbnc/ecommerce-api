@@ -10,3 +10,7 @@ class UserRequest(BaseModel):
     email: str
     username: str
     password: str
+
+
+class ConfirmAccountRequest(BaseModel):
+    token: str

@@ -69,6 +69,9 @@ create_refresh_token = partial(create_access_token, scope="refresh_token")
 create_reset_password_token = partial(
     create_access_token, scope="reset_password"
 )
+create_confirm_account_token = partial(
+    create_access_token, scope="confirm_account"
+)
 
 
 def authenticate_user(
