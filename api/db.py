@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Session, create_engine
 from .config import settings
@@ -14,4 +15,4 @@ def get_session():
         yield session
 
 
-ActiveSession = Depends(get_session)
+ActiveSession = Annotated[Session, Depends(get_session)]

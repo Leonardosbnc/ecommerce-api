@@ -2,16 +2,41 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import SQLModel, Session
+from sqlmodel import SQLModel, Session, text
 
 os.environ["FORCE_ENV_FOR_DYNACONF"] = "testing"  # noqa
 
-from api.db import engine
+from api.db import engine, get_session
 from api.app import app  # type: ignore
 from api.security import get_password_hash
 
 from .factories import UserFactory
 from .providers import set_factories_session
+
+
+@pytest.fixture(autouse=True, scope="session", name="db_engine")
+def initialize_db(request):
+    SQLModel.metadata.create_all(engine)
+    request.addfinalizer(remove_db)
+    yield engine
+
+
+@pytest.fixture(autouse=True, scope="function")
+def session(db_engine):
+    with Session(db_engine) as session:
+
+        def get_session_override():
+            return session
+
+        app.dependency_overrides[get_session] = get_session_override
+
+        yield session
+
+        session.rollback()
+        for table in reversed(SQLModel.metadata.sorted_tables):
+            session.exec(text(f"DELETE FROM {table.name};"))
+            session.commit()
+        session.close()
 
 
 @pytest.fixture(scope="function")
@@ -27,7 +52,7 @@ def auth_client():
 
     client = TestClient(app)
     token = client.post(
-        "/token",
+        "/auth/token",
         data={"username": "auth_user", "password": "pass123"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     ).json()["access_token"]
@@ -40,12 +65,6 @@ def remove_db():
         os.remove("testing.db")
     except FileNotFoundError:
         pass
-
-
-@pytest.fixture(scope="session", autouse=True)
-def initialize_db(request):
-    SQLModel.metadata.create_all(engine)
-    request.addfinalizer(remove_db)
 
 
 @pytest.fixture(autouse=True)

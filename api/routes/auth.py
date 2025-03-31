@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlmodel import Session
 from api.config import settings
 from api.db import ActiveSession
 from api.models import User
@@ -97,9 +96,7 @@ async def forgot_password(data: ForgotPassword):
 
 
 @router.post("/change-password", status_code=204)
-async def change_password(
-    data: ChangePassword, session: Session = ActiveSession
-):
+async def change_password(data: ChangePassword, session: ActiveSession):
     user = await validate_token(token=data.token)
     user.password = get_password_hash(data.password)
     session.add(user)
