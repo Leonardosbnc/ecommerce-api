@@ -42,15 +42,12 @@ class TokenData(BaseModel):
 # Functions
 
 
-def create_access_token(
+def create_jwt_token(
     data: dict,
     expires_delta: Optional[timedelta] = None,
     scope: str = "access_token",
 ) -> str:
-    """Creates a JWT Token from user data
-
-    scope: access_token or refresh_token
-    """
+    """Creates a JWT Token from provided data"""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -65,12 +62,10 @@ def create_access_token(
     return encoded_jwt
 
 
-create_refresh_token = partial(create_access_token, scope="refresh_token")
-create_reset_password_token = partial(
-    create_access_token, scope="reset_password"
-)
+create_refresh_token = partial(create_jwt_token, scope="refresh_token")
+create_reset_password_token = partial(create_jwt_token, scope="reset_password")
 create_confirm_account_token = partial(
-    create_access_token, scope="confirm_account"
+    create_jwt_token, scope="confirm_account"
 )
 
 
@@ -98,6 +93,7 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     request: Request = None,
     fresh=False,  # pyright: ignore
+    token_scope="access_token",  # pyright: ignore
 ) -> User:
     """Get current user authenticated"""
     credentials_exception = HTTPException(
@@ -120,9 +116,9 @@ def get_current_user(
             algorithms=[ALGORITHM],  # pyright: ignore  # pyright: ignore
         )
         username: str = payload.get("sub")  # pyright: ignore
-        # scope: str = payload.get("scope")  # pyright: ignore
+        scope: str = payload.get("scope")  # pyright: ignore
 
-        if username is None:
+        if username is None or scope != token_scope:
             raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
@@ -149,7 +145,9 @@ async def get_current_active_user(
 AuthenticatedUser = Annotated[User, Depends(get_current_active_user)]
 
 
-async def validate_token(token: str = Depends(oauth2_scheme)) -> User:
+async def validate_token(
+    token: str = Depends(oauth2_scheme), token_scope="access_token"
+) -> User:
     """Validates user token"""
-    user = get_current_user(token=token)
+    user = get_current_user(token=token, token_scope=token_scope)
     return user

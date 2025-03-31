@@ -12,7 +12,7 @@ from api.auth import (
     Token,
     RefreshToken,
     authenticate_user,
-    create_access_token,
+    create_jwt_token,
     create_refresh_token,
     create_reset_password_token,
     validate_token,
@@ -42,7 +42,7 @@ async def login_for_access_token(
         )
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
+    access_token = create_jwt_token(
         data={"sub": user.username, "fresh": True},
         expires_delta=access_token_expires,
     )
@@ -61,10 +61,10 @@ async def login_for_access_token(
 
 @router.post("/refresh_token", response_model=Token)
 async def refresh_token(form_data: RefreshToken):
-    user = await validate_token(token=form_data.refresh_token)
+    user = await validate_token(token=form_data.refresh_token, token_scope="refresh_token")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
+    access_token = create_jwt_token(
         data={"sub": user.username, "fresh": False},
         expires_delta=access_token_expires,
     )
@@ -97,7 +97,7 @@ async def forgot_password(data: ForgotPassword):
 
 @router.post("/change-password", status_code=204)
 async def change_password(data: ChangePassword, session: ActiveSession):
-    user = await validate_token(token=data.token)
+    user = await validate_token(token=data.token, token_scope="reset_password")
     user.password = get_password_hash(data.password)
     session.add(user)
     session.commit()

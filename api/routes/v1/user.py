@@ -53,7 +53,7 @@ async def create_user(data: UserRequest, session: ActiveSession):
 
 @router.post("/confirm_account", status_code=204)
 async def confirm_account(data: ConfirmAccountRequest, session: ActiveSession):
-    user = await validate_token(data.token)
+    user = await validate_token(data.token, token_scope="confirm_account")
     user.confirmed = True
 
     session.add(user)
