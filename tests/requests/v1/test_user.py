@@ -5,6 +5,19 @@ from tests.factories import AddressFactory
 from api.models import User
 
 
+def test_create_user(client: TestClient):
+    response = client.post(
+        "/v1/users",
+        json={
+            "email": "test@email.com",
+            "username": "username_test",
+            "password": "pass123",
+        },
+    )
+
+    assert response.status_code == 201
+
+
 def test_create_address(auth_client: TestClient):
     response = auth_client.post(
         "/v1/users/addresses",

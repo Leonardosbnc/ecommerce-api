@@ -25,9 +25,12 @@ class User(TimestamppedModel, table=True):
         self.username = self.username.lower().replace(" ", "")
 
         if not re.fullmatch(
-            'r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)', self.email
+            r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", self.email
         ):
-            raise ValueError("Email is not valid")
+            raise ValueError("Invalid Email")
+
+        if len(self.username.split(" ")) > 1:
+            raise ValueError("Invalid Username")
 
         return self
 
