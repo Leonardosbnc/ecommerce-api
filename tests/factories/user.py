@@ -13,6 +13,7 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
     username = factory.Faker("first_name")
     password = get_password_hash("pass123")
     is_admin = False
+    confirmed = True
 
 
 class AddressFactory(factory.alchemy.SQLAlchemyModelFactory):

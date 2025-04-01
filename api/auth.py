@@ -113,7 +113,7 @@ def get_current_user(
         payload = jwt.decode(
             token,
             SECRET_KEY,
-            algorithms=[ALGORITHM],  # pyright: ignore  # pyright: ignore
+            algorithms=[ALGORITHM],  # pyright: ignore
         )
         username: str = payload.get("sub")  # pyright: ignore
         scope: str = payload.get("scope")  # pyright: ignore
@@ -139,6 +139,9 @@ async def get_current_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Wraps the sync get_active_user for sync calls"""
+    if current_user.confirmed is not True:
+        raise HTTPException(status_code=401, detail="Account not confirmed")
+
     return current_user
 
 

@@ -41,6 +41,12 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    if user.confirmed is not True:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account not confirmed",
+        )
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_jwt_token(
         data={"sub": user.username, "fresh": True},
@@ -61,7 +67,9 @@ async def login_for_access_token(
 
 @router.post("/refresh_token", response_model=Token)
 async def refresh_token(form_data: RefreshToken):
-    user = await validate_token(token=form_data.refresh_token, token_scope="refresh_token")
+    user = await validate_token(
+        token=form_data.refresh_token, token_scope="refresh_token"
+    )
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_jwt_token(
