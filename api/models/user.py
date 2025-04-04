@@ -1,11 +1,15 @@
 import re
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlmodel import Field, Relationship
 from pydantic import model_validator
 from api.security import HashedPassword
 from api.utils.models import TimestamppedModel
+
+
+if TYPE_CHECKING:
+    from . import Cart
 
 
 class User(TimestamppedModel, table=True):
@@ -19,6 +23,7 @@ class User(TimestamppedModel, table=True):
     confirmed: bool = Field(default=False)
 
     addresses: Optional[List["Address"]] = Relationship(back_populates="user")
+    carts: Optional[List["Cart"]] = Relationship(back_populates="user")
 
     @model_validator(mode="before")
     def validate_and_format_unique_fields(self):
