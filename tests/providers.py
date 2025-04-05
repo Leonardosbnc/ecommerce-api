@@ -7,5 +7,7 @@ def set_factories_session(db):
         AddressFactory,
         CategoryFactory,
         ProductFactory,
+        CartFactory,
+        CartItemFactory,
     ):
         factory._meta.sqlalchemy_session = db

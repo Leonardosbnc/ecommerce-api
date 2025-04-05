@@ -19,7 +19,7 @@ SECRET_KEY = settings.security.secret_key  # pyright: ignore
 ALGORITHM = settings.security.algorithm  # pyright: ignore
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 
 # Models
@@ -89,7 +89,7 @@ def get_user(username) -> Optional[User]:
         return session.exec(query).first()
 
 
-def get_current_user(
+def get_current_user_or_raise(
     token: str = Depends(oauth2_scheme),
     request: Request = None,
     fresh=False,  # pyright: ignore
@@ -132,11 +132,23 @@ def get_current_user(
     return user
 
 
+def _try_get_current_user(
+    token: str = Depends(oauth2_scheme), request: Request = None
+) -> User | None:
+    if token is None:
+        return None
+    try:
+        user = get_current_user_or_raise(token, request)
+        return user
+    except HTTPException:
+        return None
+
+
 # FastAPI dependencies
 
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_raise),
 ) -> User:
     """Wraps the sync get_active_user for sync calls"""
     if current_user.confirmed is not True:
@@ -145,12 +157,24 @@ async def get_current_active_user(
     return current_user
 
 
+async def try_get_current_active_user(
+    current_user: User | None = Depends(_try_get_current_user),
+) -> User | None:
+    if current_user is not None and current_user.confirmed is not True:
+        raise HTTPException(status_code=401, detail="Account not confirmed")
+
+    return current_user
+
+
 AuthenticatedUser = Annotated[User, Depends(get_current_active_user)]
+OAuthenticatedUser = Annotated[
+    User, None, Depends(try_get_current_active_user)
+]
 
 
 async def validate_token(
     token: str = Depends(oauth2_scheme), token_scope="access_token"
 ) -> User:
     """Validates user token"""
-    user = get_current_user(token=token, token_scope=token_scope)
+    user = get_current_user_or_raise(token=token, token_scope=token_scope)
     return user

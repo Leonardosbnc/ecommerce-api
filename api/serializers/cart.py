@@ -1,9 +1,6 @@
 from pydantic import BaseModel, Field, computed_field
-from typing import List
+from typing import List, Any
 from uuid import UUID
-
-from .product import BaseProductResponse
-from api.models import Cart
 
 
 class CartItemRequest(BaseModel):
@@ -12,23 +9,23 @@ class CartItemRequest(BaseModel):
 
 class CartItemResponse(BaseModel):
     quantity: int
-    product: BaseProductResponse
-    cart: Cart = Field(exclude=True)
+    product_id: str = Field(exclude=True)
+    cart_id: UUID = Field(exclude=True)
 
     @computed_field
     @property
-    def _meta(self):
+    def _meta(self) -> Any:
         links = {
             "update": {
-                "href": f"/v1/carts/{self.cart.id}/items/{self.product.sku}",
+                "href": f"/v1/carts/{self.cart_id}/items/{self.product_id}",
                 "method": "PUT",
             },
             "DELETE": {
-                "href": f"/v1/carts/{self.cart.id}/items/{self.product.sku}",
+                "href": f"/v1/carts/{self.cart_id}/items/{self.product_id}",
                 "method": "DELETE",
             },
             "product": {
-                "href": f"/v1/products/{self.product.sku}",
+                "href": f"/v1/products/{self.product_id}",
                 "method": "GET",
             },
         }
@@ -46,7 +43,7 @@ class CartResponse(BaseModel):
 
     @computed_field
     @property
-    def _meta(self):
+    def _meta(self) -> Any:
         return {
             "_links": {
                 "self": {"href": f"/v1/carts/{self.data.id}", "method": "GET"},
