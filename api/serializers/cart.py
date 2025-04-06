@@ -53,3 +53,8 @@ class CartResponse(BaseModel):
                 },
             }
         }
+
+
+class CartData(BaseModel):
+    user_id: None | UUID
+    origin_ip: str

@@ -23,7 +23,9 @@ class User(TimestamppedModel, table=True):
     confirmed: bool = Field(default=False)
 
     addresses: Optional[List["Address"]] = Relationship(back_populates="user")
-    carts: Optional[List["Cart"]] = Relationship(back_populates="user")
+    cart: Optional["Cart"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"uselist": False}
+    )
 
     @model_validator(mode="before")
     def validate_and_format_unique_fields(self):

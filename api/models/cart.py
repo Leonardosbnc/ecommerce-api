@@ -12,8 +12,9 @@ if TYPE_CHECKING:
 class Cart(TimestamppedModel, table=True):
     id: Optional[UUID] = Field(primary_key=True, default_factory=uuid4)
     user_id: Optional[UUID] = Field(foreign_key="user.id")
+    origin_ip: Optional[str]
 
-    user: Optional["User"] = Relationship(back_populates="carts")
+    user: Optional["User"] = Relationship(back_populates="cart")
     items: Optional[List["CartItem"]] = Relationship()
 
 
