@@ -4,7 +4,12 @@ from sqlmodel import select, update
 from api.db import ActiveSession
 from api.auth import OAuthenticatedUser, AuthenticatedUser
 from api.models import Cart, CartItem
-from api.serializers.cart import CartResponse, CartData
+from api.serializers.cart import (
+    CartResponse,
+    CartData,
+    CartItemRequest,
+    CartItemResponse,
+)
 
 
 router = APIRouter()
@@ -100,3 +105,47 @@ def sync_ip_cart_to_user(
 
     session.delete(ip_cart)
     session.commit()
+
+
+@router.put("/items/{sku}", response_model=CartItemResponse)
+def update_cart_item(
+    sku: str,
+    data: CartItemRequest,
+    current_user: OAuthenticatedUser,
+    session: ActiveSession,
+    request: Request,
+):
+    if current_user is not None:
+        cart = session.exec(
+            select(Cart).where(Cart.user_id == current_user.id)
+        ).first()
+
+        if cart is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="No cart found"
+            )
+    cart = session.exec(
+        select(Cart).where(Cart.origin_ip == request.client.host)
+    ).first()
+
+    if cart is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No cart found"
+        )
+
+    item = session.exec(
+        select(CartItem).where(
+            CartItem.product_id == sku, CartItem.cart_id == cart.id
+        )
+    ).first()
+    if item is None:
+        item = CartItem.model_validate(
+            {**data.model_dump(), **{"product_id": sku, "cart_id": cart.id}}
+        )
+        session.add(item)
+
+    item.quantity = data.quantity
+    session.commit()
+    session.refresh(item)
+
+    return item

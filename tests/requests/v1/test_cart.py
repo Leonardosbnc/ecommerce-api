@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import select, Session
 from uuid import UUID
 
-from tests.providers import CartFactory, CartItemFactory
+from tests.providers import CartFactory, CartItemFactory, ProductFactory
 from api.models import User
 
 
@@ -37,3 +37,14 @@ def test_sync_cart(
         CartItemFactory.create(cart_id=UUID(cart_id))
     response = auth_client.post("/v1/carts/sync_ip_to_user")
     assert response.status_code == 204
+
+
+def test_add_cart_item(client: TestClient):
+    product = ProductFactory.create()
+    client.post("/v1/carts", json={})
+
+    response = client.put(
+        f"/v1/carts/items/{product.sku}", json={"quantity": 3}
+    )
+
+    assert response.status_code == 200
