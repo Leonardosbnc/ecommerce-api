@@ -54,18 +54,16 @@ class BaseProductResponse(BaseModel):
     @computed_field
     @property
     def _meta(self) -> Any:
-        links = [
-            {
-                "self": {
-                    "href": f"/v1/products/{self.data.sku}",
-                    "method": "GET",
-                },
-                "category": {
-                    "href": f"/v1/categories/{self.data.category_id}",
-                    "method": "GET",
-                },
-            }
-        ]
+        links = {
+            "self": {
+                "href": f"/v1/products/{self.data.sku}",
+                "method": "GET",
+            },
+            "category": {
+                "href": f"/v1/categories/{self.data.category_id}",
+                "method": "GET",
+            },
+        }
 
         return {"_links": links}
 
@@ -74,23 +72,21 @@ class AdminProductResponse(BaseProductResponse):
     @computed_field
     @property
     def _meta(self) -> Any:
-        links = [
-            {
-                "self": {"href": f"/v1/products/{self.sku}", "method": "GET"},
-                "delete": {
-                    "href": f"/v1/products/{self.sku}",
-                    "method": "DELETE",
-                },
-                "update": {
-                    "href": f"/v1/products/{self.sku}",
-                    "method": "PATCH",
-                },
-                "category": {
-                    "href": f"/v1/categories/{self.category_id}",
-                    "method": "GET",
-                },
-            }
-        ]
+        links = {
+            "self": {"href": f"/v1/products/{self.sku}", "method": "GET"},
+            "delete": {
+                "href": f"/v1/products/{self.sku}",
+                "method": "DELETE",
+            },
+            "update": {
+                "href": f"/v1/products/{self.sku}",
+                "method": "PATCH",
+            },
+            "category": {
+                "href": f"/v1/categories/{self.category_id}",
+                "method": "GET",
+            },
+        }
 
         return {"_links": links}
 

@@ -13,9 +13,12 @@ class Cart(TimestamppedModel, table=True):
     id: Optional[UUID] = Field(primary_key=True, default_factory=uuid4)
     user_id: Optional[UUID] = Field(foreign_key="user.id")
     origin_ip: Optional[str]
+    order_id: Optional[UUID] = Field(
+        foreign_key="orders.id", unique=True, default=None
+    )
 
     user: Optional["User"] = Relationship(back_populates="cart")
-    items: Optional[List["CartItem"]] = Relationship()
+    items: Optional[List["CartItem"]] = Relationship(back_populates="cart")
 
 
 class CartItem(SQLModel, table=True):
@@ -24,3 +27,4 @@ class CartItem(SQLModel, table=True):
     quantity: int
 
     product: Optional["Product"] = Relationship()
+    cart: Optional["Cart"] = Relationship(back_populates="items")

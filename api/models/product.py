@@ -1,8 +1,8 @@
 import re
 
-from sqlmodel import Field, ARRAY, String, Column, SQLModel, Relationship
+from sqlmodel import Field, SQLModel, Relationship
 from pydantic import model_validator
-from typing import List, Optional
+from typing import Optional
 
 from api.utils.models import TimestamppedModel
 
@@ -14,7 +14,7 @@ class Product(TimestamppedModel, table=True):
     description: str
     cover_image_key: Optional[str] = None
     unit_price: int
-    discount_percentage: float = Field(default=0.0)
+    discount_percentage: float = Field(ge=0.0, lt=100.0, default=0.0)
     category_id: int = Field(foreign_key="category.id")
 
     category: Optional["Category"] = Relationship()
@@ -33,6 +33,16 @@ class Product(TimestamppedModel, table=True):
             raise ValueError("Invalid SKU")
 
         return self
+
+    @property
+    def discounted_price(self) -> int:
+        if self.discount_percentage > 0:
+            return (self.unit_price / 100) * (100 - self.discount_percentage)
+        return self.unit_price
+
+    @property
+    def category_name(self) -> str:
+        return self.category.name
 
 
 class ProductImage(TimestamppedModel, table=True):

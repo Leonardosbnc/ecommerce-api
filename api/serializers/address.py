@@ -22,13 +22,11 @@ class AddressResponse(BaseModel):
     @computed_field
     @property
     def _meta(self) -> Any:
-        links = [
-            {
-                "self": {"href": f"/address/{self.id}", "method": "GET"},
-                "delete": {"href": f"/address/{self.id}", "method": "DELETE"},
-                "update": {"href": f"/address/{self.id}", "method": "PATCH"},
-            }
-        ]
+        links = {
+            "self": {"href": f"/address/{self.id}", "method": "GET"},
+            "delete": {"href": f"/address/{self.id}", "method": "DELETE"},
+            "update": {"href": f"/address/{self.id}", "method": "PATCH"},
+        }
 
         return {"_links": links}
 

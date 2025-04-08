@@ -1,6 +1,5 @@
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, status
-from fastapi_pagination import paginate
 from sqlmodel import select, column, col
 
 from api.db import ActiveSession

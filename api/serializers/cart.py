@@ -19,7 +19,7 @@ class CartItemResponse(BaseModel):
                 "href": f"/v1/carts/items/{self.product_id}",
                 "method": "PUT",
             },
-            "DELETE": {
+            "delete": {
                 "href": f"/v1/carts/items/{self.product_id}",
                 "method": "DELETE",
             },
